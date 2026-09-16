@@ -19,36 +19,28 @@ jobs:
             echo "Go to Settings → Secrets and variables → Actions and add it."
             exit 1
           fi
-
           python3 -c '
           import json, os, urllib.request, urllib.error, sys
-
           data = os.environ.get("SUPABASE_PROJECTS_JSON", "[]")
           try:
               projects = json.loads(data)
           except Exception as e:
               print(f"❌ Could not parse SUPABASE_PROJECTS_JSON: {e}")
               sys.exit(1)
-
           print(f"📦 Found {len(projects)} Supabase project(s).\n")
           has_error = False
-
           for idx, proj in enumerate(projects):
               url = proj.get("url", "").rstrip("/")
               key = proj.get("anon_key", "").strip()
               name = proj.get("name", f"project-{idx+1}")
-
               display_name = f"{name} ({url})"
-
               if not url or not key:
                   print(f"❌ Skipping [{name}] — missing url or anon_key in JSON.")
                   has_error = True
                   continue
-
-              # Target Auth Health endpoint which reliably responds HTTP 200 across all key types
-              target_url = f"{url}/auth/v1/health"
+              # Target REST endpoint to generate real database activity
+              target_url = f"{url}/rest/v1/"
               print(f"🌐 Pinging Database: {display_name}")
-
               req = urllib.request.Request(
                   target_url,
                   headers={
@@ -56,7 +48,6 @@ jobs:
                       "Authorization": f"Bearer {key}"
                   }
               )
-
               try:
                   with urllib.request.urlopen(req, timeout=20) as response:
                       code = response.getcode()
@@ -71,7 +62,6 @@ jobs:
               except Exception as e:
                   print(f"❌ Connection error for {display_name}: {e}\n")
                   has_error = True
-
           if has_error:
               print("💥 One or more project pings failed. Check the logs above.")
               sys.exit(1)
