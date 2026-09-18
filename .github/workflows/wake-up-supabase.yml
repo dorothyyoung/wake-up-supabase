@@ -39,7 +39,7 @@ jobs:
                   has_error = True
                   continue
               # Target REST endpoint to generate real database activity
-              target_url = f"{url}/rest/v1/"
+              target_url = f"{url}/rest/v1/products?select=id&limit=1"
               print(f"🌐 Pinging Database: {display_name}")
               req = urllib.request.Request(
                   target_url,
